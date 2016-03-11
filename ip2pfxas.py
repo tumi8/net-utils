@@ -5,18 +5,12 @@ import re
 import pdb
 import sys
 import csv
-#from func import *
-#import pylab
-#import matplotlib
-#import gzip
 import io
 import pprint
 import numpy as np
 import datetime
 import os
 import subprocess
-#import glob
-#import pandas as pd
 import threading
 
 
@@ -26,7 +20,7 @@ def matchIPToPrefixlist(ip,ases,pfxes):
     respfx = {}
     unannounced = list()
     j=0
-    
+
     for i in ip:
         # IPv6 address as integer, to compare with numpy
         thishost = int(ipaddress.IPv6Address(i))
@@ -71,23 +65,18 @@ def matchIPToPrefixlist(ip,ases,pfxes):
         except KeyError:
             respfx[net] = 1
 
-        try: 
+        try:
             resas[netas] += 1
         except KeyError:
             resas[netas] = 1
-    
+
     return (resas,respfx,unannounced)
 
 
 
-
-
-# NOTE: Modify here for MWN or IXP or both
-source =  " "
-
 filename=sys.argv[1];
 
-
+# TODO: CHANGE HERE
 pfxfile = 'ip2as/routeviews-rv6-20150906-1200.pfx2as'
 pfxlist = []
 
@@ -112,7 +101,7 @@ for pfx in pfxlist:
         subnetsizes[pfx[1]] = subnetsizes[pfx[1]] + 1
     except KeyError:
         subnetsizes[pfx[1]] = 1
-    
+
 totalASes = len(pfxperAS)
 totalPrefixes = len(pfxlist)
 print("Total ASes:    ", totalASes)
@@ -129,31 +118,11 @@ npfxHigh = np.empty(0)
 
 for p in pfxlist:
     thisnet = ipaddress.IPv6Network(p[0]+"/"+str(p[1]))
-    
+
     npfxLow  = np.append(npfxLow, int(thisnet[0]))
     npfxHigh = np.append(npfxHigh, int(thisnet[thisnet.num_addresses-1]))
-    
+
 ## benchmark: reading takes ~5 seconds
-
-
-#
-### Load data file to analyze
-#datalist = []
-#
-fh = open(filename, 'r');
-#    for line in fh.readlines():
-#        datalist.append(line.strip())
-#fh.close()
-#
-#
-#datalist2 = []
-#chunksize = 15000
-#
-#for i in range(0,len(datalist), chunksize):
-#    # Well, I expected an KeyError here, but obviously python is smart when using ranges to subindex lists
-#    datalist2.append(datalist[i:i+chunksize])
-#
-#
 
 
 ips = list();
@@ -163,11 +132,10 @@ pfxes=list();
 ### Goal memory-efficient readline
 def ipReadline(i):
 
-
     with open(filename) as fh:
         for line in fh:
                 ips.append(line.strip())
-        
+
     return matchIPToPrefixlist(ips,ases,pfxes)
 ###
 
@@ -175,8 +143,5 @@ fh2 =open(filename+".aspfx.csv",'w');
 
 ipReadline(0)
 for i in np.arange(len(ips)):
-    #print (ips[i] + "," + ases[i] + "," + pfxes[i]);
     fh2.write(ips[i] + "," + ases[i] + "," + pfxes[i]+ "\n");
 fh.close()
-
-
