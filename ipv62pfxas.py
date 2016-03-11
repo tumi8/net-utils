@@ -77,7 +77,7 @@ def matchIPToPrefixlist(ip,ases,pfxes):
 filename=sys.argv[1];
 
 # TODO: CHANGE HERE
-pfxfile = 'ip2as/routeviews-rv6-20150906-1200.pfx2as'
+pfxfile = sys.argv[2] #'ip2as/routeviews-rv6-20150906-1200.pfx2as'
 pfxlist = []
 
 with open(pfxfile, 'r') as pf:
