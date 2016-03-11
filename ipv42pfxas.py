@@ -15,9 +15,14 @@ def main():
         prefixes.append(line.strip())
     fh.close()
 
+    global fh2
+    fh2=open(ip_fname+".aspfx.csv",'w');
+
     with open(ip_fname) as fh:
         for line in fh.readlines():
             prefix_lookup(line.strip(), prefixes)
+
+    fh2.close
 
 
 def prefix_lookup(ip, prefixes):
@@ -75,7 +80,8 @@ def prefix_lookup(ip, prefixes):
 
 
     res = prefixes[correct].split("\t")
-    print(ip + "," + res[0] + "," + res[1] + "," + res[2])
+    #print(ip + "," + res[0] + "," + res[1] + "," + res[2])
+    fh2.write(ip + "," + res[0] + "," + res[1] + "," + res[2])
 
 
 

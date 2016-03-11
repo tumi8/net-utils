@@ -144,4 +144,4 @@ fh2 =open(filename+".aspfx.csv",'w');
 ipReadline(0)
 for i in np.arange(len(ips)):
     fh2.write(ips[i] + "," + ases[i] + "," + pfxes[i]+ "\n");
-fh.close()
+fh2.close()
