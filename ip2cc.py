@@ -4,10 +4,7 @@ import csv;
 import numpy as np;
 import sys
 
-#print( 'Number of arguments:', len(sys.argv), 'arguments.' )
-#print( 'Argument List:', str(sys.argv))
 IP2LocObj = IP2Location.IP2Location();
-#IP2LocObj.open("geoloc/IP-COUNTRY.BIN");
 IP2LocObj.open(sys.argv[2]);
 file=sys.argv[1]
 data=np.genfromtxt(file, delimiter=',',dtype='str');#,max_rows=10000);
@@ -27,7 +24,7 @@ for x in np.nditer(data):
         d[rec.country_short] = d[rec.country_short]+1;
     else:
         d[rec.country_short]=1
-f.close();    
+f.close()
 del d['0.0.0.0']
 print("Located " + str(len(data)) + " IPs in " + str(len(d)) + " countries:")
 for k, v in d.items():
