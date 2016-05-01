@@ -96,6 +96,7 @@ with open(pfxfile, 'r') as pf:
     for row in readcsv:
         pfxlist.append([row[0], int(row[1]), row[2]])
 pf.close()
+print("Done reading pfx input file");
 
 pfxdate = re.findall('\d{8}', pfxfile)
 print("Using Caida Prefix2AS mapping from:", pfxdate)
@@ -118,12 +119,8 @@ totalPrefixes = len(pfxlist)
 print("Total ASes:    ", totalASes)
 print("Total Prefixes:", totalPrefixes)
 
-
-
-
-
 ## Turn prefix list into numpy array of lowest and highest address
-
+print("Converting pfxes to numpy array"); 
 npfxLow = np.empty(0)
 npfxHigh = np.empty(0)
 
@@ -135,6 +132,7 @@ for p in pfxlist:
     
 ## benchmark: reading takes ~5 seconds
 
+print("Done converting pfxes to numpy array"); 
 
 #
 ### Load data file to analyze
@@ -173,7 +171,9 @@ def ipReadline(i):
 
 fh2 =open(filename+".aspfx.csv",'w');
 
+print("Starting to read from data file ...")
 ipReadline(0)
+print("Done reading from data file, writing out ...")
 for i in np.arange(len(ips)):
     #print (ips[i] + "," + ases[i] + "," + pfxes[i]);
     fh2.write(ips[i] + "," + ases[i] + "," + pfxes[i]+ "\n");

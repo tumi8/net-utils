@@ -1,0 +1,3 @@
+This is terribly slow - improvements should be:
+* multi-procesing, but only 1 lookup array
+* lookup array caching as pickle

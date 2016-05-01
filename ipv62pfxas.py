@@ -112,7 +112,7 @@ print("Total Prefixes:", totalPrefixes)
 
 
 ## Turn prefix list into numpy array of lowest and highest address
-
+print("Building numpy array from prefixes");
 npfxLow = np.empty(0)
 npfxHigh = np.empty(0)
 
@@ -140,8 +140,9 @@ def ipReadline(i):
 ###
 
 fh2 =open(filename+".aspfx.csv",'w');
-
+print("Reading IPs from file ... ");
 ipReadline(0)
+print("Done reading IPs from file ... ");
 for i in np.arange(len(ips)):
     fh2.write(ips[i] + "," + ases[i] + "," + pfxes[i]+ "\n");
 fh2.close()
