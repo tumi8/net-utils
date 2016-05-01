@@ -29,7 +29,7 @@ def matchIPToPrefixlist(ip,ases,pfxes):
     
     for i in ip:
         # IPv6 address as integer, to compare with numpy
-        thishost = int(ipaddress.IPv6Address(i))
+        thishost = int(ipaddress.IPv4Address(i))
 
         resg = np.greater_equal(thishost, npfxLow)
         resl = np.less_equal(thishost,npfxHigh)
@@ -128,7 +128,7 @@ npfxLow = np.empty(0)
 npfxHigh = np.empty(0)
 
 for p in pfxlist:
-    thisnet = ipaddress.IPv6Network(p[0]+"/"+str(p[1]))
+    thisnet = ipaddress.IPv4Network(p[0]+"/"+str(p[1]))
     
     npfxLow  = np.append(npfxLow, int(thisnet[0]))
     npfxHigh = np.append(npfxHigh, int(thisnet[thisnet.num_addresses-1]))
