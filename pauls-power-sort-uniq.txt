@@ -1,0 +1,12 @@
+echo '
+local vals = {}
+
+for line in io.stdin:lines() do
+        vals[line] = (vals[line] or 0) + 1
+end
+
+for i, v in pairs(vals) do
+        print(v, i)
+end
+' > sort-uniq.lua
+lua sort-uniq.lua < rtt-scan-all/zmap-scan-all-ipv4.cut14
