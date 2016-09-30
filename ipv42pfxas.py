@@ -77,8 +77,12 @@ def prefix_lookup(ip, prefixes):
 
         curr += 1
 
-
-    res = prefixes[correct].split("\t")
+    ip_network, pfx_network, _ = prefixes[correct].split("\t")
+    network = ipaddress.IPv4Network(ip_network + "/" + pfx_network)
+    if ipa in network:
+        res = prefixes[correct].split("\t")
+    else:
+        res = ["0.0.0.0", "0", "0"]
     #print(ip + "," + res[0] + "," + res[1] + "," + res[2])
     fh2.write(ip + "," + res[0] + "/" + res[1] + "," + res[2] + "\n")
 
