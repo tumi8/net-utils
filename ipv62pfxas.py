@@ -73,10 +73,16 @@ def matchIPToPrefixlist(ip,ases,pfxes):
     return (resas,respfx,unannounced)
 
 
+def ownhelp():
+    print("Usage: ", sys.argv[0], "[file with IP addresses] [pfx2as file]")
+
+if len(sys.argv) is not 3:
+    print("Wrong number of arguments!")
+    ownhelp()
+    sys.exit(1)
+
 
 filename=sys.argv[1];
-
-# TODO: CHANGE HERE
 pfxfile = sys.argv[2] #'ip2as/routeviews-rv6-20150906-1200.pfx2as'
 pfxlist = []
 

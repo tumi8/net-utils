@@ -26,7 +26,7 @@ def matchIPToPrefixlist(ip,ases,pfxes):
     respfx = {}
     unannounced = list()
     j=0
-    
+
     for i in ip:
         # IPv6 address as integer, to compare with numpy
         thishost = int(ipaddress.IPv4Address(i))
@@ -71,11 +71,11 @@ def matchIPToPrefixlist(ip,ases,pfxes):
         except KeyError:
             respfx[net] = 1
 
-        try: 
+        try:
             resas[netas] += 1
         except KeyError:
             resas[netas] = 1
-    
+
     return (resas,respfx,unannounced)
 
 
