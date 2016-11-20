@@ -145,7 +145,7 @@ def ipReadline(i):
     return matchIPToPrefixlist(ips,ases,pfxes)
 ###
 
-fh2 =open(filename+".aspfx.csv",'w');
+fh2 = open(filename+".aspfx.csv",'w');
 print("Reading IPs from file ... ");
 ipReadline(0)
 print("Done reading IPs from file ... ");
