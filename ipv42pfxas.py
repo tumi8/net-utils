@@ -109,7 +109,7 @@ def prefix_lookup(ipin, prefixes):
     else:
         res = ["0.0.0.0", "0", "0"]
     #print(ip + "," + res[0] + "," + res[1] + "," + res[2])
-
+    # res: prefix, prefix length, asn
     return res
 
 

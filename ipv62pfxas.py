@@ -29,7 +29,7 @@ def matchIPToPrefixlist(ipin,ases,pfxes,s):
     else:
         ip = ipin
     j=0
-    print(ip,ipin)
+    #print(ip,ipin)
 
     for i in ip:
         # IPv6 address as integer, to compare with numpy
@@ -150,6 +150,20 @@ def ip2pfxas(ips,s):
     ases = list()
     pfxes = list()
     resas, respfx, unannounced = matchIPToPrefixlist(ips,ases,pfxes,s);
+    if isinstance(ips, list):
+        return resas, respfx, unannounced
+    else:
+        try:
+            resashlp, ignoretmp = resas.popitem()
+            respfxhlp, ignoretmp = respfx.popitem()
+            return resashlp, respfxhlp, unannounced
+        except:
+            if unannounced:
+                return "-","-,",unannounced
+            else:
+                print("CRITICAL ERROR -- no popitem, no unnaounced in ipv62pfxas")
+                sys.exit(1)
+
     #print(ips, ases, pfxes, resas, respfx, unannounced)
 
 class Statevars:
