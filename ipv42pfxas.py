@@ -41,7 +41,15 @@ def main():
     fh2.close
 
 
-def prefix_lookup(ip, prefixes):
+def prefix_lookup(ipin, prefixes):
+    ip = ""
+    if not isinstance(ip, str):
+        ip=str(ipin)
+    elif (isinstance(ipin, ipaddress.IPv4Address)):
+        ip = str(ipin)
+    else:
+        ip=ipin
+
     # first find starting /8 prefix entry, they are sorted numerically -> binary search on /8
     num_prefixes = len(prefixes)
     curr = int(num_prefixes/2)
