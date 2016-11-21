@@ -94,8 +94,8 @@ def readpfxfile(pfxfile):
         pklfile.close()
         print("pickle loaded after: " , str(time.time()-time_before) )
         return s;
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
+    except FileNotFoundError as e:
+        print("FileNotFoundError :", e, "reading from raw data and creating pickle")
         pfxlist = []
         with open(pfxfile, 'r') as pf:
             readcsv = csv.reader(pf, delimiter='\t')

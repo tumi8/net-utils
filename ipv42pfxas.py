@@ -2,25 +2,42 @@
 
 import ipaddress
 import sys
+import pickle
+import time
 
+def readpfxfile(prefix_fname):
+    prefixes = list()
+    time_before = time.time()
+    try:
+        pklfile = open(prefix_fname+".pickle",'rb')
+        prefixes = pickle.load(pklfile)
+        pklfile.close()
+        print("pickle loaded after: " , str(time.time()-time_before) )
+        return prefixes;
+    except FileNotFoundError as e:
+        print("FileNotFoundError :", e, "reading from raw data and creating pickle")
+        fh = open(prefix_fname)
+        for line in fh.readlines():
+            prefixes.append(line.strip())
+        fh.close()
+        print("pfxes read after: " + str(time.time()-time_before))
+        pklfile=open(prefix_fname+".pickle",'wb')
+        pickle.dump(prefixes,pklfile)
+        print("pickle dumped after: " + str(time.time()-time_before))
+        pklfile.close()
+        return prefixes
 
 def main():
     ip_fname = sys.argv[1]
     prefix_fname = sys.argv[2]
+    prefixes = readpfxfile(prefix_fname)
 
-    prefixes = list()
-
-    fh = open(prefix_fname)
-    for line in fh.readlines():
-        prefixes.append(line.strip())
-    fh.close()
-
-    global fh2
     fh2=open(ip_fname+".aspfx.csv",'w');
-
     with open(ip_fname) as fh:
         for line in fh.readlines():
-            prefix_lookup(line.strip(), prefixes)
+            ip = line.strip()
+            res = prefix_lookup(ip, prefixes)
+            fh2.write(ip + "," + res[0] + "/" + res[1] + "," + res[2] + "\n")
     fh2.close
 
 
@@ -84,8 +101,8 @@ def prefix_lookup(ip, prefixes):
     else:
         res = ["0.0.0.0", "0", "0"]
     #print(ip + "," + res[0] + "," + res[1] + "," + res[2])
-    fh2.write(ip + "," + res[0] + "/" + res[1] + "," + res[2] + "\n")
 
+    return res
 
 
 if __name__ == "__main__":
