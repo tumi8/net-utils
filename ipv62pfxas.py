@@ -150,7 +150,7 @@ def ip2pfxas(ips,s):
     ases = list()
     pfxes = list()
     resas, respfx, unannounced = matchIPToPrefixlist(ips,ases,pfxes,s);
-    print(ips, ases, pfxes, resas, respfx, unannounced)
+    #print(ips, ases, pfxes, resas, respfx, unannounced)
 
 class Statevars:
     def __init__ (self,npfxlow, npfxhigh, pfxlist):
