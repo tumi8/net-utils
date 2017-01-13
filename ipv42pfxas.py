@@ -32,7 +32,7 @@ def main():
     prefix_fname = sys.argv[2]
     prefixes = readpfxfile(prefix_fname)
 
-    fh2=open(ip_fname+".aspfx.csv",'w');
+    fh2 = open(ip_fname + ".aspfx.csv", 'w')
     with open(ip_fname) as fh:
         for line in fh.readlines():
             ip = line.strip()
@@ -44,16 +44,16 @@ def main():
 def prefix_lookup(ipin, prefixes):
     ip = ""
     if not isinstance(ip, str):
-        ip=str(ipin)
+        ip = str(ipin)
     elif (isinstance(ipin, ipaddress.IPv4Address)):
         ip = str(ipin)
     else:
-        ip=ipin
+        ip = ipin
 
     # first find starting /8 prefix entry, they are sorted numerically -> binary search on /8
     num_prefixes = len(prefixes)
-    curr = int(num_prefixes/2)
-    step = int(num_prefixes/2)
+    curr = int(num_prefixes / 2)
+    step = int(num_prefixes / 2)
     correct = -1
 
     ip_slash8 = int(ip.split(".")[0])
@@ -74,13 +74,12 @@ def prefix_lookup(ipin, prefixes):
 
         curr = min(curr, len(prefixes) - 1)
 
-
         if step == 1:
             if one:
                 break
             one = True
         else:
-            step = int(step/2)
+            step = int(step / 2)
 
     curr = correct
     candidate = ipaddress.IPv4Network(prefixes[correct].split("\t")[0].split(".")[0] + ".0.0.0/8")
@@ -108,7 +107,7 @@ def prefix_lookup(ipin, prefixes):
         res = prefixes[correct].split("\t")
     else:
         res = ["0.0.0.0", "0", "0"]
-    #print(ip + "," + res[0] + "," + res[1] + "," + res[2])
+    # print(ip + "," + res[0] + "," + res[1] + "," + res[2])
     # res: prefix, prefix length, asn
     return res
 
