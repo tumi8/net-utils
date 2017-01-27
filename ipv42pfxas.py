@@ -41,7 +41,14 @@ def main():
     fh2.close
 
 
+def prefix_lookup_merged(ipin, prefixes):
+    """ returns ['8.8.8.0/24','15169']"""
+    a, b, c = prefix_lookup(ipin, prefixes)
+    return ["{}/{}".format(a, c), c]
+
+
 def prefix_lookup(ipin, prefixes):
+    """ returns ['8.8.8.0', '24', '15169'] """
     ip = ""
     if not isinstance(ip, str):
         ip = str(ipin)
