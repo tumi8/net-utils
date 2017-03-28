@@ -21,8 +21,8 @@ def captured_output():
         sys.stdout, sys.stderr = old_out, old_err
 
 def followdomain(domain, depth, origdomain):
-    if depth > 5:
-         sys.stderr.write("followdomain: depth exceeded for domain {} \n".format(domain))
+    if depth > 20:
+         sys.stderr.write("followdomain: depth exceeded for domain {} from origdomain {} \n".format(domain, origdomain))
          return
 
     # print all records that we have
