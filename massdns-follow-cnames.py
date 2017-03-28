@@ -94,6 +94,7 @@ def loopdomainlists(domainlist):
         line = line.rstrip('\n')
         line = line.rstrip('.')
         line += '.'
+        line = line.lower()
 
         followdomain(line, 0, line)
 
@@ -213,6 +214,17 @@ def runtest():
     expstdout="8::9,testing.de.\n4.5.6.7,testing.de."
     expstderr="dicts empty! check input files!"
     test(domainlist, massdnslist, expstdout, expstderr, 8)
+
+    # test9 - mixed caps
+    cnames = dict()
+    ins = dict()
+    domainlist = ["TEST.de"]
+    massdnslist = [
+        "test.de.     3600   IN  A   4.5.6.7",
+    ]
+    expstdout="4.5.6.7,test.de."
+    expstderr="dicts empty! check input files!"
+    test(domainlist, massdnslist, expstdout, expstderr, 9)
 
 
 def main(argv):
