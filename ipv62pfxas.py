@@ -161,7 +161,7 @@ def ip2pfxas(ips,s):
             if unannounced:
                 return "-","-,",unannounced
             else:
-                print("CRITICAL ERROR -- no popitem, no unnaounced in ipv62pfxas")
+                print("CRITICAL ERROR -- no popitem, no unannounced in ipv62pfxas")
                 sys.exit(1)
 
     #print(ips, ases, pfxes, resas, respfx, unannounced)
