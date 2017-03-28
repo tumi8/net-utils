@@ -138,7 +138,7 @@ def runtest():
         "test.de.    3600    IN  CNAME   test.de.",
     ]
     expstdout = ""
-    expstderr = "dicts empty! check input files!\nfollowdomain: depth exceeded for domain test.de."
+    expstderr = "dicts empty! check input files!\nfollowdomain: depth exceeded for domain test.de. from origdomain test.de."
     test(domainlist, massdnslist, expstdout, expstderr, 2)
 
     # test3
@@ -202,6 +202,7 @@ def runtest():
     test(domainlist, massdnslist, expstdout, expstderr, 7)
 
     # test8 - mixed A and AAAA
+    # this is annoying, this test will fail like every 2nd run due to the random order when outputting set
     cnames = dict()
     ins = dict()
     domainlist = ["testing.de"]
