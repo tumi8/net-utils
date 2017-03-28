@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8
+# by scheitle@net.in.tum.de
 
 import sys, csv
 
@@ -48,8 +49,10 @@ def massdns2dicts(massdnslist):
     # tips.org.au.    3600    IN  CNAME   prod-lb.hmri.org.au.
     cnames.clear()
     ins.clear()
-    datareader = csv.reader(massdnslist, delimiter=' ', skipinitialspace=True )
-    for row in datareader:
+    #datareader = csv.reader(massdnslist, delimiter=' ', skipinitialspace=True )
+    #datareader = csv.reader(massdnslist, delimiter=' ', skipinitialspace=True )
+    rows = (line.split() for line in massdnslist)
+    for row in rows:
         try:
             # process CNAMEs into dict
             if(row[3] == "CNAME"):
@@ -76,6 +79,9 @@ def massdns2dicts(massdnslist):
         # e.g., empty lines throw a IndexError
         except IndexError:
             continue
+
+    if len(cnames) == 0 or len(ins) == 0 :
+        sys.stderr.write("dicts empty! check input files!\n")
 
 
 def loopdomainlists(domainlist):
@@ -132,15 +138,16 @@ def runtest():
         "test.de.    3600    IN  CNAME   test.de.",
     ]
     expstdout = ""
-    expstderr = "followdomain: depth exceeded for domain test.de."
+    expstderr = "dicts empty! check input files!\nfollowdomain: depth exceeded for domain test.de."
     test(domainlist, massdnslist, expstdout, expstderr, 2)
 
     # test3
     domainlist = ["testing.de.", "test2.de."]
+    # mixes tabs and spaces!
     massdnslist = [
         "testing.de.     3600   IN  CNAME   testcname.de.",
-        "testcname.de.   3600 IN  CNAME     testcname2.de.",
-        "testcname2.de.   3600 IN  A     1.2.3.4"
+        "testcname.de. 3600   IN    CNAME   testcname2.de.",
+        "testcname2.de. 3600 IN A 1.2.3.4"
     ]
     expstdout="1.2.3.4,testing.de."
     expstderr=""
@@ -182,6 +189,29 @@ def runtest():
     expstdout="4.5.6.7,testing.de."
     expstderr="CNAME not ending with . : testcname.de"
     test(domainlist, massdnslist, expstdout, expstderr, 6)
+
+    # test7 - domainlist without final . , records with final .
+    cnames = dict()
+    ins = dict()
+    domainlist = ["testing.de"]
+    massdnslist = [
+        "testing.de.     3600   IN  A   4.5.6.7",
+    ]
+    expstdout="4.5.6.7,testing.de."
+    expstderr="dicts empty! check input files!"
+    test(domainlist, massdnslist, expstdout, expstderr, 7)
+
+    # test8 - mixed A and AAAA
+    cnames = dict()
+    ins = dict()
+    domainlist = ["testing.de"]
+    massdnslist = [
+        "testing.de.     3600   IN  A   4.5.6.7",
+        "testing.de.     3600   IN  AAAA   8::9",
+    ]
+    expstdout="8::9,testing.de.\n4.5.6.7,testing.de."
+    expstderr="dicts empty! check input files!"
+    test(domainlist, massdnslist, expstdout, expstderr, 8)
 
 
 def main(argv):
