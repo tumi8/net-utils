@@ -78,10 +78,13 @@ def massdns2dicts(massdnslist):
 
         # e.g., empty lines throw a IndexError
         except IndexError:
+            sys.stderr.write("IndexError: " + str(row)+"\n")
             continue
 
-    if len(cnames) == 0 or len(ins) == 0 :
-        sys.stderr.write("dicts empty! check input files!\n")
+    if len(cnames) == 0  :
+        sys.stderr.write("cnames dict empty! check input files!\n")
+    if len(ins) == 0 :
+        sys.stderr.write("in rr dict empty! check input files!\n")
 
 
 def loopdomainlists(domainlist):
@@ -237,6 +240,8 @@ def main(argv):
          usage()
          sys.exit(1)
 
+    if(debug):
+        sys.stderr.write(str(argv)+"\n")
     with open(sys.argv[2]) as massdnslist:
         massdns2dicts(massdnslist)
 
