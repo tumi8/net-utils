@@ -83,9 +83,9 @@ def massdns2dicts(massdnslist):
             continue
 
     if len(cnames) == 0  :
-        sys.stderr.write("cnames dict empty! check input files: " + str(argv) + "\n")
+        sys.stderr.write("cnames dict empty! check input files: " + str(sys.argv) + "\n")
     if len(ins) == 0 :
-        sys.stderr.write("in rr dict empty! check input files! " + str(argv) + "\n")
+        sys.stderr.write("in rr dict empty! check input files! " + str(sys.argv) + "\n")
 
 
 def loopdomainlists(domainlist):
