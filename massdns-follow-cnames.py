@@ -41,6 +41,7 @@ def followdomain(domain, depth, origdomain):
 
 def usage():
      sys.stderr.write('./script domain-list massdns-output \nFollows CNAMEs through to a record, outputs to STDOUT. \n')
+     sys.stderr.write("argv:" + str(sys.argv) + "\n")
      return
 
 def massdns2dicts(massdnslist):
@@ -82,9 +83,9 @@ def massdns2dicts(massdnslist):
             continue
 
     if len(cnames) == 0  :
-        sys.stderr.write("cnames dict empty! check input files!\n")
+        sys.stderr.write("cnames dict empty! check input files: " + str(argv) + "\n")
     if len(ins) == 0 :
-        sys.stderr.write("in rr dict empty! check input files!\n")
+        sys.stderr.write("in rr dict empty! check input files! " + str(argv) + "\n")
 
 
 def loopdomainlists(domainlist):
