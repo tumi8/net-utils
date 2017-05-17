@@ -2,23 +2,9 @@
 
 import ipaddress
 import re
-import pdb
 import sys
 import csv
-#from func import *
-#import pylab
-#import matplotlib
-#import gzip
-import io
-import pprint
 import numpy as np
-import datetime
-import os
-import subprocess
-#import glob
-#import pandas as pd
-import threading
-
 
 
 def matchIPToPrefixlist(ip,ases,pfxes):

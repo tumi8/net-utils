@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import IP2Location
-import csv
 import numpy as np
 import sys
 
