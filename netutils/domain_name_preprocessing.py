@@ -8,8 +8,17 @@ import os
 import collections
 import binascii
 import socket
+import enum
 
 ACCEPTED_CHARACTER = frozenset('{0}.-_'.format(string.printable[0:62]))
+
+
+@enum.unique
+class RegexStrategy(enum.Enum):
+    abstract = 'abstract'
+    moderate = 'moderate'
+    strict = 'strict'
+
 ABSTRACT_STRATEGY = 'abstract'
 MODERATE_STRATEGY = 'moderate'
 STRICT_STRATEGY = 'strict'
@@ -22,7 +31,7 @@ def __create_parser_arguments(parser):
                                                                             'filename')
     parser.add_argument('-t', '--tlds-file', type=str, required=True,
                         dest='tlds_file', help='The path to the ICANN tlds file')
-    parser.add_argument('-s', '--strategy', type=str, dest='regexStrategy',
+    parser.add_argument('-s', '--strategy', type=str, dest='regex_strategy',
                         choices=[STRICT_STRATEGY, ABSTRACT_STRATEGY, MODERATE_STRATEGY],
                         default=ABSTRACT_STRATEGY, help='Specify a regex Strategy')
     parser.add_argument('-d', '--destination', type=str, dest='destination', default='domain-files',
@@ -53,6 +62,8 @@ def main():
         with open(args.white_list_file_path) as filter_list_file:
             for line in filter_list_file:
                 white_list.add(line.strip())
+
+    regex_strategy = RegexStrategy(value=args.regex_strategy)
 
     os.mkdir(args.destination)
 
@@ -89,7 +100,7 @@ def main():
             if len(ip_domain_tuples) > 10**5:
                 correct, bad, bad_dns, ip_encoded, custom_filtered, _ = preprocess_domains(
                     ip_domain_tuples, tlds, white_list=white_list, ip_version=args.ip_version,
-                    regex_strategy=args.regexStrategy)
+                    regex_strategy=regex_strategy)
                 save(correct, bad, bad_dns, ip_encoded, custom_filtered)
                 del ip_domain_tuples[:]
 
@@ -102,7 +113,8 @@ def main():
 
 
 def preprocess_domains(ip_domain_tuples: [(str, str)], tlds: {str}, white_list: {str} = None,
-                       ip_version: str = 'ipv4', regex_strategy: str = ABSTRACT_STRATEGY,
+                       ip_version: str = 'ipv4',
+                       regex_strategy: RegexStrategy = RegexStrategy.abstract,
                        ip_encoding_filter: bool = True):
     """
     Sanitize filepart from start to end
@@ -128,7 +140,8 @@ def preprocess_domains(ip_domain_tuples: [(str, str)], tlds: {str}, white_list: 
         else:
             if white_list is not None and ip_address not in white_list:
                 custom_filter_lines.append((ip_address, domain))
-            elif not is_ipv6 and ip_encoding_filter and has_ip_encoded(ip_address, domain, ipregex):
+            elif not is_ipv6 and ip_encoding_filter and __has_ip_encoded(ip_address, domain,
+                                                                         ipregex):
                 ip_encoded_lines.append((ip_address, domain))
             elif not is_ipv6 and ip_encoding_filter and \
                     is_ip_hex_encoded(ip_address, domain):
@@ -159,9 +172,17 @@ def is_ip_hex_encoded(ip_address, domain):
     return hex_ip.upper() in domain.upper()
 
 
-def has_ip_encoded(ip, domain, ipregex):
+def __has_ip_encoded(ip, domain, ipregex):
     """Basic check if the domain is a isp client domain address"""
     return ipregex.search(ip + ',' + domain)
+
+
+def has_ip_encoded(ip, domain, regex_strategy: RegexStrategy=RegexStrategy.abstract):
+    ipregex = re.compile(__select_ip_regex(regex_strategy), flags=re.MULTILINE)
+    if __has_ip_encoded(ip, domain, ipregex):
+        return True
+    else:
+        return False
 
 
 def __ip_to_int(ip_addr, ip_version):
@@ -188,17 +209,17 @@ def __int_to_alphanumeric(num: int):
         return __int_to_alphanumeric(div) + rest_ret
 
 
-def __select_ip_regex(regex_strategy):
+def __select_ip_regex(regex_strategy: RegexStrategy):
     """Selects the regular expression according to the option set in the arguments"""
-    if regex_strategy == ABSTRACT_STRATEGY:
+    if regex_strategy == RegexStrategy.abstract:
         # most abstract regex
         return r'^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}),' \
                r'.*(\1.*\2.*\3.*\4|\4.*\3.*\2.*\1).*$'
-    elif regex_strategy == MODERATE_STRATEGY:
+    elif regex_strategy == RegexStrategy.moderate:
         # slightly stricter regex
         return r'^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}),' \
                r'.*(\1.+\2.+\3.+\4|\4.+\3.+\2.+\1).*$'
-    elif regex_strategy == STRICT_STRATEGY:
+    elif regex_strategy == RegexStrategy.strict:
         # regex with delimiters restricted to '.','-' and '_'
         return r'^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}),' \
                r'.*(0{0,2}?\1[\.\-_]0{0,2}?\2[\.\-_]0{0,2}?\3[\.\-_]' \
@@ -208,4 +229,9 @@ def __select_ip_regex(regex_strategy):
 if __name__ == '__main__':
     main()
 
-__all__ = [has_ip_encoded, is_ip_hex_encoded, preprocess_domains]
+__all__ = ['has_ip_encoded',
+           'is_ip_hex_encoded',
+           'has_ip_alphanumeric_encoded',
+           'preprocess_domains',
+           'RegexStrategy',
+           ]
