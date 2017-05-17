@@ -5,15 +5,16 @@ import sys
 import pickle
 import time
 
+
 def readpfxfile(prefix_fname):
     prefixes = list()
     time_before = time.time()
     try:
-        pklfile = open(prefix_fname+".pickle",'rb')
+        pklfile = open(prefix_fname+".pickle", 'rb')
         prefixes = pickle.load(pklfile)
         pklfile.close()
-        print("pickle loaded after: " , str(time.time()-time_before) )
-        return prefixes;
+        print("pickle loaded after: ", str(time.time()-time_before))
+        return prefixes
     except FileNotFoundError as e:
         print("FileNotFoundError :", e, "reading from raw data and creating pickle")
         fh = open(prefix_fname)
@@ -21,11 +22,12 @@ def readpfxfile(prefix_fname):
             prefixes.append(line.strip())
         fh.close()
         print("pfxes read after: " + str(time.time()-time_before))
-        pklfile=open(prefix_fname+".pickle",'wb')
-        pickle.dump(prefixes,pklfile)
+        pklfile = open(prefix_fname+".pickle", 'wb')
+        pickle.dump(prefixes, pklfile)
         print("pickle dumped after: " + str(time.time()-time_before))
         pklfile.close()
         return prefixes
+
 
 def main():
     ip_fname = sys.argv[1]
@@ -38,7 +40,7 @@ def main():
             ip = line.strip()
             res = prefix_lookup(ip, prefixes)
             fh2.write(ip + "," + res[0] + "/" + res[1] + "," + res[2] + "\n")
-    fh2.close
+    fh2.close()
 
 
 def prefix_lookup_merged(ipin, prefixes):
@@ -52,7 +54,7 @@ def prefix_lookup(ipin, prefixes):
     ip = ""
     if not isinstance(ip, str):
         ip = str(ipin)
-    elif (isinstance(ipin, ipaddress.IPv4Address)):
+    elif isinstance(ipin, ipaddress.IPv4Address):
         ip = str(ipin)
     else:
         ip = ipin
@@ -104,7 +106,8 @@ def prefix_lookup(ipin, prefixes):
             pass
         elif ipa in network:
             correct = curr
-            candidate = ipaddress.IPv4Network(prefixes[correct].split("\t")[0] + "/" + prefixes[correct].split("\t")[1])
+            candidate = ipaddress.IPv4Network(prefixes[correct].split("\t")[0] + "/" +
+                                              prefixes[correct].split("\t")[1])
 
         curr += 1
 
