@@ -2,18 +2,12 @@
 
 import ipaddress
 import re
-import pdb
 import sys
 import csv
-import io
-import pprint
 import numpy as np
-import datetime
-import os
-import subprocess
-import threading
 import pickle
 import time
+
 
 def matchIPToPrefixlist(ipin,ases,pfxes,s):
     resas = {}
@@ -56,9 +50,9 @@ def matchIPToPrefixlist(ipin,ases,pfxes,s):
 
         # This is the ID of the longest prefix in matchpfx
         if len(matchsubnets) == 0:
-            unannounced.append(i);
-            pfxes.append("-");
-            ases.append("-");
+            unannounced.append(i)
+            pfxes.append("-")
+            ases.append("-")
             continue
         else:
             longestprefix = matchsubnets.index(max(matchsubnets))
@@ -67,9 +61,9 @@ def matchIPToPrefixlist(ipin,ases,pfxes,s):
         realmatch = matchpfx[longestprefix]
         net = realmatch[0] + "/" + str(realmatch[1])
         netas = realmatch[2]
-        pfxes.append(net);
-        ases.append(netas);
-        j=j+1;
+        pfxes.append(net)
+        ases.append(netas)
+        j=j+1
         try:
             respfx[net] += 1
         except KeyError:
@@ -93,7 +87,7 @@ def readpfxfile(pfxfile):
         s = pickle.load(pklfile)
         pklfile.close()
         print("pickle loaded after: " , str(time.time()-time_before) )
-        return s;
+        return s
     except FileNotFoundError as e:
         print("FileNotFoundError :", e, "reading from raw data and creating pickle")
         pfxlist = []
@@ -125,13 +119,13 @@ def readpfxfile(pfxfile):
         print("Total Prefixes:", totalPrefixes)
 
         ## Turn prefix list into numpy array of lowest and highest address
-        print("Building numpy array from prefixes");
+        print("Building numpy array from prefixes")
         npfxLow = np.empty(0)
         npfxHigh = np.empty(0)
 
         for p in pfxlist:
             thisnet = ipaddress.IPv6Network(p[0]+"/"+str(p[1]))
-            npfxLow  = np.append(npfxLow, int(thisnet[0]))
+            npfxLow = np.append(npfxLow, int(thisnet[0]))
             npfxHigh = np.append(npfxHigh, int(thisnet[thisnet.num_addresses-1]))
 
         ## benchmark: reading takes ~5 seconds
@@ -149,7 +143,7 @@ def readpfxfile(pfxfile):
 def ip2pfxas(ips,s):
     ases = list()
     pfxes = list()
-    resas, respfx, unannounced = matchIPToPrefixlist(ips,ases,pfxes,s);
+    resas, respfx, unannounced = matchIPToPrefixlist(ips,ases,pfxes,s)
     if isinstance(ips, list):
         return resas, respfx, unannounced
     else:
@@ -182,13 +176,13 @@ def main(argv):
         ownhelp()
         sys.exit(1)
 
-    filename=sys.argv[1];
+    filename=sys.argv[1]
     pfxfile = sys.argv[2] #'ip2as/routeviews-rv6-20150906-1200.pfx2as'
 
     s = readpfxfile(pfxfile)
-    ips = list();
-    ases = list();
-    pfxes = list();
+    ips = list()
+    ases = list()
+    pfxes = list()
 
     ### Goal memory-efficient readline
     def ipReadline(i):
@@ -200,12 +194,12 @@ def main(argv):
         return matchIPToPrefixlist(ips,ases,pfxes,s)
     ###
 
-    fh2 = open(filename+".aspfx.csv",'w');
-    print("Reading IPs from file ... ");
+    fh2 = open(filename+".aspfx.csv",'w')
+    print("Reading IPs from file ... ")
     ipReadline(0)
-    print("Done reading IPs from file ... ");
+    print("Done reading IPs from file ... ")
     for i in np.arange(len(ips)):
-        fh2.write(ips[i] + "," + ases[i] + "," + pfxes[i]+ "\n");
+        fh2.write(ips[i] + "," + ases[i] + "," + pfxes[i]+ "\n")
     fh2.close()
 
 if __name__ == "__main__":
