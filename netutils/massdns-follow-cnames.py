@@ -2,12 +2,15 @@
 # -*- coding:utf-8
 # by scheitle@net.in.tum.de
 
-import sys, csv
+import sys
 
-debug=False
-cnames, ins = dict(), dict()
 from contextlib import contextmanager
 from io import StringIO
+
+
+debug = False
+cnames, ins = dict(), dict()
+
 
 @contextmanager
 def captured_output():
@@ -20,29 +23,32 @@ def captured_output():
     finally:
         sys.stdout, sys.stderr = old_out, old_err
 
+
 def followdomain(domain, depth, origdomain):
     if depth > 20:
-         sys.stderr.write("followdomain: depth exceeded for domain {} from origdomain {} \n".format(domain, origdomain))
-         return
+        sys.stderr.write("followdomain: depth exceeded for domain {} from origdomain {} \n".format(domain, origdomain))
+        return
 
     # print all records that we have
     if domain in ins:
         for i in ins[domain]:
-            print("{},{}".format(i,origdomain))
+            print("{},{}".format(i, origdomain))
 
     # follow CNAMEs
     if domain in cnames:
         for i in cnames[domain]:
-            if(debug):
+            if debug:
                 print("recursive followdomain for domain {} to cname {}".format(domain, i))
             followdomain(i, depth+1, origdomain)
 
     return
 
+
 def usage():
-     sys.stderr.write('./script domain-list massdns-output \nFollows CNAMEs through to a record, outputs to STDOUT. \n')
-     sys.stderr.write("argv:" + str(sys.argv) + "\n")
-     return
+    sys.stderr.write('./script domain-list massdns-output \nFollows CNAMEs through to a record, outputs to STDOUT. \n')
+    sys.stderr.write("argv:" + str(sys.argv) + "\n")
+    return
+
 
 def massdns2dicts(massdnslist):
     # example structure
@@ -50,20 +56,20 @@ def massdns2dicts(massdnslist):
     # tips.org.au.    3600    IN  CNAME   prod-lb.hmri.org.au.
     cnames.clear()
     ins.clear()
-    #datareader = csv.reader(massdnslist, delimiter=' ', skipinitialspace=True )
-    #datareader = csv.reader(massdnslist, delimiter=' ', skipinitialspace=True )
+    # datareader = csv.reader(massdnslist, delimiter=' ', skipinitialspace=True )
+    # datareader = csv.reader(massdnslist, delimiter=' ', skipinitialspace=True )
     rows = (line.split() for line in massdnslist)
     for row in rows:
         try:
             # process CNAMEs into dict
-            if(row[3] == "CNAME"):
+            if row[3] == "CNAME":
                 if not row[4].endswith("."):
                     sys.stderr.write("CNAME not ending with . : " + row[4] + "\n")
                     continue
 
                 if row[0] in cnames:
                     cnames[row[0]].update([row[4]])
-                    if(debug):
+                    if debug:
                         print("Adding CNAME {} to domain {}".format(row[4], row[0]))
                 else:
                     cnames[row[0]] = set([row[4]])
@@ -75,16 +81,16 @@ def massdns2dicts(massdnslist):
                 if row[0] in ins:
                     ins[row[0]].update([row[4]])
                 else:
-                    ins[row[0]] = set([row[4]]);
+                    ins[row[0]] = set([row[4]])
 
         # e.g., empty lines throw a IndexError
         except IndexError:
             sys.stderr.write("IndexError: " + str(row)+"\n")
             continue
 
-    if len(cnames) == 0  :
+    if len(cnames) == 0:
         sys.stderr.write("cnames dict empty! check input files: " + str(sys.argv) + "\n")
-    if len(ins) == 0 :
+    if len(ins) == 0:
         sys.stderr.write("in rr dict empty! check input files! " + str(sys.argv) + "\n")
 
 
@@ -92,7 +98,7 @@ def loopdomainlists(domainlist):
     # first arg is domain list
     for line in domainlist:
         # skip empty lines
-        if(len(line)<2):
+        if len(line) < 2:
             continue
 
         line = line.rstrip('\n')
@@ -138,7 +144,7 @@ def runtest():
     test(domainlist, massdnslist, expstdout, expstderr, 1)
 
     # test2
-    domainlist = ["test.de." ]
+    domainlist = ["test.de."]
     massdnslist = [
         "test.de.    3600    IN  CNAME   test.de.",
     ]
@@ -154,8 +160,8 @@ def runtest():
         "testcname.de. 3600   IN    CNAME   testcname2.de.",
         "testcname2.de. 3600 IN A 1.2.3.4"
     ]
-    expstdout="1.2.3.4,testing.de."
-    expstderr=""
+    expstdout = "1.2.3.4,testing.de."
+    expstderr = ""
     test(domainlist, massdnslist, expstdout, expstderr, 3)
 
     # test4
@@ -165,8 +171,8 @@ def runtest():
         "testcname.de.   3600 IN  CNAME     testcname2.de.",
         "testcname2.de.   3600 IN  A     1.2.3.4"
     ]
-    expstdout="1.2.3.4,testing.de.\n1.2.3.4,testcname2.de."
-    expstderr=""
+    expstdout = "1.2.3.4,testing.de.\n1.2.3.4,testcname2.de."
+    expstderr = ""
     test(domainlist, massdnslist, expstdout, expstderr, 4)
 
     # test5
@@ -177,8 +183,8 @@ def runtest():
         "testcname.de.   3600 IN  CNAME     testcname2.de.",
         "testcname2.de.   3600 IN  A     1.2.3.4"
     ]
-    expstdout="4.5.6.7,testing.de.\n1.2.3.4,testing.de.\n1.2.3.4,testcname2.de."
-    expstderr=""
+    expstdout = "4.5.6.7,testing.de.\n1.2.3.4,testing.de.\n1.2.3.4,testcname2.de."
+    expstderr = ""
     test(domainlist, massdnslist, expstdout, expstderr, 5)
 
     # test6
@@ -191,8 +197,8 @@ def runtest():
         "testcname.de.   3600 IN  CNAME     testcname2.de.",
         "testcname2.de.   3600 IN  A     1.2.3.4"
     ]
-    expstdout="4.5.6.7,testing.de."
-    expstderr="CNAME not ending with . : testcname.de"
+    expstdout = "4.5.6.7,testing.de."
+    expstderr = "CNAME not ending with . : testcname.de"
     test(domainlist, massdnslist, expstdout, expstderr, 6)
 
     # test7 - domainlist without final . , records with final .
@@ -202,8 +208,8 @@ def runtest():
     massdnslist = [
         "testing.de.     3600   IN  A   4.5.6.7",
     ]
-    expstdout="4.5.6.7,testing.de."
-    expstderr="dicts empty! check input files!"
+    expstdout = "4.5.6.7,testing.de."
+    expstderr = "dicts empty! check input files!"
     test(domainlist, massdnslist, expstdout, expstderr, 7)
 
     # test8 - mixed A and AAAA
@@ -215,8 +221,8 @@ def runtest():
         "testing.de.     3600   IN  A   4.5.6.7",
         "testing.de.     3600   IN  AAAA   8::9",
     ]
-    expstdout="8::9,testing.de.\n4.5.6.7,testing.de."
-    expstderr="dicts empty! check input files!"
+    expstdout = "8::9,testing.de.\n4.5.6.7,testing.de."
+    expstderr = "dicts empty! check input files!"
     test(domainlist, massdnslist, expstdout, expstderr, 8)
 
     # test9 - mixed caps
@@ -226,8 +232,8 @@ def runtest():
     massdnslist = [
         "test.de.     3600   IN  A   4.5.6.7",
     ]
-    expstdout="4.5.6.7,test.de."
-    expstderr="dicts empty! check input files!"
+    expstdout = "4.5.6.7,test.de."
+    expstderr = "dicts empty! check input files!"
     test(domainlist, massdnslist, expstdout, expstderr, 9)
 
 
@@ -237,11 +243,11 @@ def main(argv):
         sys.exit(0)
 
     if len(argv) != 3:
-         sys.stderr.write('Invalid Argument Count!\n')
-         usage()
-         sys.exit(1)
+        sys.stderr.write('Invalid Argument Count!\n')
+        usage()
+        sys.exit(1)
 
-    if(debug):
+    if debug:
         sys.stderr.write(str(argv)+"\n")
     with open(sys.argv[2]) as massdnslist:
         massdns2dicts(massdnslist)
