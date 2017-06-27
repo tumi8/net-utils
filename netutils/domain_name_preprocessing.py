@@ -9,6 +9,7 @@ import collections
 import binascii
 import socket
 import enum
+import ipaddress
 
 ACCEPTED_CHARACTER = frozenset('{0}.-_'.format(string.printable[0:62]))
 
@@ -148,6 +149,8 @@ def preprocess_domains(ip_domain_tuples: [(str, str)], tlds: {str}, white_list: 
                 ip_encoded_lines.append((ip_address, domain))
             elif ip_encoding_filter and has_ip_alphanumeric_encoded(ip_address, domain, ip_version):
                 ip_encoded_lines.append((ip_address, domain))
+            elif is_ipv6 and ip_encoding_filter and is_ipv6_address_encoded(ip_address, domain):
+                ip_encoded_lines.append((ip_address, domain))
             else:
                 if domain.split('.')[-1] in tlds:
                     good_lines.append((ip_address, domain))
@@ -177,12 +180,17 @@ def __has_ip_encoded(ip, domain, ipregex):
     return ipregex.search(ip + ',' + domain)
 
 
-def has_ip_encoded(ip, domain, regex_strategy: RegexStrategy=RegexStrategy.abstract):
+def is_ipv4_address_encoded(ip, domain, regex_strategy: RegexStrategy=RegexStrategy.abstract):
     ipregex = re.compile(__select_ip_regex(regex_strategy), flags=re.MULTILINE)
     if __has_ip_encoded(ip, domain, ipregex):
         return True
     else:
         return False
+
+
+def is_ipv6_address_encoded(ipv6_address, domain):
+    ip_address_exploded = ipaddress.ip_address('ffff::1').exploded.split(':')
+    return '.'.join(ip_address_exploded) in domain or '.'.join(ip_address_exploded[::-1])
 
 
 def __ip_to_int(ip_addr, ip_version):

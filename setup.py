@@ -2,7 +2,7 @@
 
 from distutils.core import setup
 
-install_requires = ['IP2Location>=8.0.0', 'numpy>=1.12',]
+install_requires = ['IP2Location>=8.0.0', 'numpy>=1.12', 'ipaddress>=1.0']
 
 setup(name='I8 Net-Utils',
       version='0.1',
