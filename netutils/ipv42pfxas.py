@@ -78,17 +78,19 @@ def prefix_lookup(ipin, prefixes):
             curr = curr - step
         elif int(pfx_ip.split(".")[0]) > ip_slash8:
             curr = curr - step
+            if one:
+                break
         elif int(pfx_ip.split(".")[0]) < ip_slash8:
             curr = curr + step
+            if one:
+                break
 
         curr = min(curr, len(prefixes) - 1)
 
         if step == 1:
-            if one:
-                break
             one = True
         else:
-            step = int(step / 2)
+            step = int(round(step / 2))
 
     curr = correct
     candidate = ipaddress.IPv4Network(prefixes[correct].split("\t")[0].split(".")[0] + ".0.0.0/8")
