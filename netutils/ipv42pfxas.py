@@ -97,7 +97,7 @@ def prefix_lookup(ipin, prefixes):
 
     ipa = ipaddress.IPv4Address(ip)
 
-    while True:
+    while curr < len(prefixes):
         ip_network, pfx_network, _ = prefixes[curr].split("\t")
         network = ipaddress.IPv4Network(ip_network + "/" + pfx_network)
         # If this network does not overlap with the last candidate network
