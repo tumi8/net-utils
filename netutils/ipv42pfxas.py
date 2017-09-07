@@ -10,10 +10,10 @@ def readpfxfile(prefix_fname):
     prefixes = list()
     time_before = time.time()
     try:
-        pklfile = open(prefix_fname+".pickle", 'rb')
+        pklfile = open(prefix_fname + ".pickle", 'rb')
         prefixes = pickle.load(pklfile)
         pklfile.close()
-        print("pickle loaded after: ", str(time.time()-time_before))
+        print("pickle loaded after: ", str(time.time() - time_before))
         return prefixes
     except FileNotFoundError as e:
         print("FileNotFoundError :", e, "reading from raw data and creating pickle")
@@ -21,10 +21,10 @@ def readpfxfile(prefix_fname):
         for line in fh.readlines():
             prefixes.append(line.strip())
         fh.close()
-        print("pfxes read after: " + str(time.time()-time_before))
-        pklfile = open(prefix_fname+".pickle", 'wb')
+        print("pfxes read after: " + str(time.time() - time_before))
+        pklfile = open(prefix_fname + ".pickle", 'wb')
         pickle.dump(prefixes, pklfile)
-        print("pickle dumped after: " + str(time.time()-time_before))
+        print("pickle dumped after: " + str(time.time() - time_before))
         pklfile.close()
         return prefixes
 
