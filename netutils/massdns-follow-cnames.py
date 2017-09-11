@@ -39,7 +39,7 @@ def followdomain(domain, depth, origdomain):
         for i in cnames[domain]:
             if debug:
                 print("recursive followdomain for domain {} to cname {}".format(domain, i))
-            followdomain(i, depth+1, origdomain)
+            followdomain(i, depth + 1, origdomain)
 
     return
 
@@ -77,7 +77,7 @@ def massdns2dicts(massdnslist):
                         print("Creating CNAME {} for domain {}".format(row[4], row[0]))
 
             # process records into dict
-            elif row[3] == "A" or row[3] == "AAAA":
+            elif row[3] == "A" or row[3] == "AAAA" or row[3] == "CAA":
                 if row[0] in ins:
                     ins[row[0]].update([row[4]])
                 else:
@@ -85,7 +85,7 @@ def massdns2dicts(massdnslist):
 
         # e.g., empty lines throw a IndexError
         except IndexError:
-            sys.stderr.write("IndexError: " + str(row)+"\n")
+            sys.stderr.write("IndexError: " + str(row) + "\n")
             continue
 
     if len(cnames) == 0:
@@ -127,7 +127,7 @@ def test(domainlist, massdnslist, expstdout, expstderr, testid):
 
 def runtest():
     # test1
-    domainlist = ["fingertips.org.au", "mobiletips.org.au", "stresslesstips.org.au", "tips.org.au", "hmri.org.au" ]
+    domainlist = ["fingertips.org.au", "mobiletips.org.au", "stresslesstips.org.au", "tips.org.au", "hmri.org.au"]
     massdnslist = [
         "mobiletips.org.au.  1800    IN  A   119.148.66.108",
         "stresslesstips.org.au.  14400   IN  A   150.107.72.66",
@@ -226,8 +226,8 @@ def runtest():
     test(domainlist, massdnslist, expstdout, expstderr, 8)
 
     # test9 - mixed caps
-    cnames = dict()
-    ins = dict()
+    # cnames = dict()
+    # ins = dict()
     domainlist = ["TEST.de"]
     massdnslist = [
         "test.de.     3600   IN  A   4.5.6.7",
@@ -248,7 +248,7 @@ def main(argv):
         sys.exit(1)
 
     if debug:
-        sys.stderr.write(str(argv)+"\n")
+        sys.stderr.write(str(argv) + "\n")
     with open(sys.argv[2]) as massdnslist:
         massdns2dicts(massdnslist)
 
