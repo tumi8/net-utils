@@ -77,11 +77,16 @@ def massdns2dicts(massdnslist):
                         print("Creating CNAME {} for domain {}".format(row[4], row[0]))
 
             # process records into dict
-            elif row[3] == "A" or row[3] == "AAAA" or row[3] == "CAA":
+            elif row[3] == "A" or row[3] == "AAAA":
                 if row[0] in ins:
                     ins[row[0]].update([row[4]])
                 else:
                     ins[row[0]] = set([row[4]])
+            elif row[3] == "CAA":
+                if row[0] in ins:
+                    ins[row[0]].update([row[5]])
+                else:
+                    ins[row[0]] = set([row[5]])
 
         # e.g., empty lines throw a IndexError
         except IndexError:
