@@ -28,10 +28,11 @@ STRICT_STRATEGY = 'strict'
 def __create_parser_arguments(parser):
     """Creates the arguments for the parser"""
     parser.add_argument('filename', help='filename to sanitize', type=str)
-    parser.add_argument('-e', '--encoding', default='uft-8', type=str, help='the encoding for the '
+    parser.add_argument('-e', '--encoding', default='utf-8', type=str, help='the encoding for the '
                                                                             'filename')
     parser.add_argument('-t', '--tlds-file', type=str, required=True,
                         dest='tlds_file', help='The path to the ICANN tlds file')
+                        # http://data.iana.org/TLD/tlds-alpha-by-domain.txt
     parser.add_argument('-s', '--strategy', type=str, dest='regex_strategy',
                         choices=[STRICT_STRATEGY, ABSTRACT_STRATEGY, MODERATE_STRATEGY],
                         default=ABSTRACT_STRATEGY, help='Specify a regex Strategy')
