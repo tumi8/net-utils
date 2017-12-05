@@ -46,7 +46,7 @@ def main():
 def prefix_lookup_merged(ipin, prefixes):
     """ returns ['8.8.8.0/24','15169']"""
     a, b, c = prefix_lookup(ipin, prefixes)
-    return ["{}/{}".format(a, c), c]
+    return ["{}/{}".format(a, b), c]
 
 
 def prefix_lookup(ipin, prefixes):
