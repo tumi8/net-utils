@@ -52,9 +52,7 @@ def prefix_lookup_merged(ipin, prefixes):
 def prefix_lookup(ipin, prefixes):
     """ returns ['8.8.8.0', '24', '15169'] """
     ip = ""
-    if not isinstance(ip, str):
-        ip = str(ipin)
-    elif isinstance(ipin, ipaddress.IPv4Address):
+    if not isinstance(ipin, str):
         ip = str(ipin)
     else:
         ip = ipin
