@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"fmt"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -18,7 +19,7 @@ var opts struct {
 	Args struct {
 		DomainFile flags.Filename `description:"Gzipped domain file containinig original domains" value-name:"DOMAINFILE"`
 		InFile     flags.Filename `description:"Input file containinig massdns results" value-name:"INFILE"`
-		OutFile    flags.Filename `description:"Output file containing IP,domain" value-name:"OUTFILE"`
+		//OutFile    flags.Filename `description:"Output file containing IP,domain" value-name:"OUTFILE"`
 	} `positional-args:"yes" required:"yes"`
 }
 
@@ -71,27 +72,36 @@ func processRecords(recordChan <-chan string, outputChan chan<- []string, wg *sy
 }
 
 func outputResult(outputChan <-chan []string) {
-	fh, err := os.OpenFile(string(opts.Args.OutFile), os.O_RDWR|os.O_CREATE, 0755)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer fh.Close()
-	w := csv.NewWriter(fh)
-	defer w.Flush()
-
-	i := 0
+	// stdout := false
+	// if opts.Args.OutFile == "-" {
+	//		stdout = true
+	//		w := false
+	//} else {
+	//	fh, err := os.OpenFile(string(opts.Args.OutFile), os.O_RDWR|os.O_CREATE, 0755)
+	//
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	defer fh.Close()
+	// 	w := csv.NewWriter(fh)
+	// 	defer w.Flush()
+	// }
+	// i := 0
 
 	for res := range outputChan {
 		// Backward compatibility
 		if res[0] == "\\# 0" {
 			res[0] = "\\#"
 		}
-		w.Write(res)
-		if i == 10000 {
-			i = 0
-			w.Flush()
-		}
-		i += 1
+		// if !stdout{
+		// 	w.Write(res)
+		// 	if i == 10000 {
+		// 		i = 0
+		// 		w.Flush()
+		// 	}
+		// 	i += 1
+		// } else {
+		fmt.Println(res[0] + "," + res[1] + "\n")
 	}
 }
 
