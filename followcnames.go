@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"compress/gzip"
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"runtime"
 	"strings"
 	"sync"
-	"fmt"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -117,6 +117,7 @@ func readInput(recordChan chan<- string, outputChan chan<- []string, filename st
 	fh, _ := os.Open(filename)
 	r := csv.NewReader(bufio.NewReader(fh))
 	r.Comma = '\t'
+	r.LazyQuotes = true
 
 	for {
 		record, err := r.Read()
@@ -125,11 +126,12 @@ func readInput(recordChan chan<- string, outputChan chan<- []string, filename st
 		if err == io.EOF {
 			break
 		} else if err != nil {
-				log.Fatal(err)
+			log.Println(err)
+			continue
 		}
 		// make sure we read 5 records
 		if len(record) < 5 {
-			log.Fatal(err)
+			log.Fatal("incorrect number of fields")
 			break
 		}
 
