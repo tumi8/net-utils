@@ -124,6 +124,13 @@ func readInput(recordChan chan<- string, outputChan chan<- []string, filename st
 		// Stop at EOF
 		if err == io.EOF {
 			break
+		} else if err != nil {
+				log.Fatal(err)
+		}
+		// make sure we read 5 records
+		if len(record) < 5 {
+			log.Fatal(err)
+			break
 		}
 
 		domain := record[0]
