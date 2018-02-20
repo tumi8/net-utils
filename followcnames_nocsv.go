@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"compress/gzip"
-	"fmt"
+	// "fmt"
 	"log"
 	"os"
 	"runtime"
@@ -67,12 +67,19 @@ func processRecords(recordChan <-chan string, outputChan chan<- []string, wg *sy
 }
 
 func outputResult(outputChan <-chan []string) {
+	logger := log.New(os.Stdout, "", 0)
 	for res := range outputChan {
 		// Backward compatibility
 		if res[0] == "\\# 0" {
 			res[0] = "\\#"
 		}
-		fmt.Print(res[0] + "," + res[1] + "\n")
+		if (len(res[0]) < 3) || (len(res[1]) <3) {
+			log.Printf("Short output: " + res[0] + res[1] + "\n")
+		}
+		// fmt.Print(res[0] + "," + res[1] + "\n")
+		// print should do, and this is only one routine, but lets try this anyway:
+		// https://stackoverflow.com/questions/14694088/is-it-safe-for-more-than-one-goroutine-to-print-to-stdout/43327441#43327441
+		logger.Print(res[0] + "," + res[1] + "\n")
 	}
 }
 
