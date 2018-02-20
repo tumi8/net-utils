@@ -3,9 +3,7 @@ package main
 import (
 	"bufio"
 	"compress/gzip"
-	"encoding/csv"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"runtime"
@@ -69,36 +67,11 @@ func processRecords(recordChan <-chan string, outputChan chan<- []string, wg *sy
 }
 
 func outputResult(outputChan <-chan []string) {
-	// stdout := false
-	// if opts.Args.OutFile == "-" {
-	//		stdout = true
-	//		w := false
-	//} else {
-	//	fh, err := os.OpenFile(string(opts.Args.OutFile), os.O_RDWR|os.O_CREATE, 0755)
-	//
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	defer fh.Close()
-	// 	w := csv.NewWriter(fh)
-	// 	defer w.Flush()
-	// }
-	// i := 0
-
 	for res := range outputChan {
 		// Backward compatibility
 		if res[0] == "\\# 0" {
 			res[0] = "\\#"
 		}
-		// if !stdout{
-		// 	w.Write(res)
-		// 	if i == 10000 {
-		// 		i = 0
-		// 		w.Flush()
-		// 	}
-		// 	i += 1
-		// } else {
-		//fmt.Println(res[0] + "," + res[1] + "\n")
 		fmt.Print(res[0] + "," + res[1] + "\n")
 	}
 }
@@ -113,21 +86,10 @@ func readInput(recordChan chan<- string, outputChan chan<- []string, filename st
 	ins = make(map[string](map[string]bool))
 
 	fh, _ := os.Open(filename)
-	r := csv.NewReader(bufio.NewReader(fh))
-	r.Comma = '\t'
-	r.LazyQuotes = true
-
-	for {
-		record, err := r.Read()
-
-		// Stop at EOF
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			log.Fatal(err)
-			continue
-		}
-		// make sure we read 5 records
+	scanner2 := bufio.NewScanner(fh)
+	for scanner2.Scan() {
+		sc := scanner2.Text()
+		record := strings.Split(sc, "\t")
 		if len(record) < 5 {
 			log.Fatal("incorrect number of fields")
 			break
@@ -160,6 +122,7 @@ func readInput(recordChan chan<- string, outputChan chan<- []string, filename st
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	zr, err := gzip.NewReader(fh)
 	if err != nil {
 		log.Fatal(err)
