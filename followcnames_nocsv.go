@@ -73,8 +73,9 @@ func outputResult(outputChan <-chan []string) {
 		if res[0] == "\\# 0" {
 			res[0] = "\\#"
 		}
-		if (len(res[0]) < 3) || (len(res[1]) <3) {
-			log.Printf("Short output: " + res[0] + res[1] + "\n")
+		// TODO: once stable, drop all the short and crappy outputs
+		if (len(res[0]) < 3) || (len(res[1]) <3) && (res[0] != "::" ) && (res[0] != "\\#") {
+			log.Printf("Short output: " + res[0] + "," + res[1] + "\n")
 		}
 		// fmt.Print(res[0] + "," + res[1] + "\n")
 		// print should do, and this is only one routine, but lets try this anyway:
