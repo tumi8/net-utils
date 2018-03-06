@@ -74,10 +74,6 @@ func outputResult(outputChan <-chan []string) {
 			res[0] = "\\#"
 		}
 		// most recent: decision to *not* drop any outputs, as this is systematically done at later steps
-		// TODO: once stable, drop all the short and crappy outputs
-		//if (len(res[0]) < 3) || (len(res[1]) <3) && (res[0] != "::" ) && (res[0] != "\\#") {
-		//	log.Printf("Short output: " + res[0] + "," + res[1] + "\n")
-		//}
 		// fmt.Print(res[0] + "," + res[1] + "\n")
 		// print should do, and this is only one routine, but lets try this anyway:
 		// https://stackoverflow.com/questions/14694088/is-it-safe-for-more-than-one-goroutine-to-print-to-stdout/43327441#43327441
