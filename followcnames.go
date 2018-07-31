@@ -15,8 +15,8 @@ import (
 
 var opts struct {
 	Args struct {
-		DomainFile flags.Filename `description:"Gzipped domain file containinig original domains" value-name:"DOMAINFILE"`
-		InFile     flags.Filename `description:"Input file containinig massdns results" value-name:"INFILE"`
+		DomainFile flags.Filename `description:"Input: gzipped domain file containinig original domains" value-name:"DOMAINFILE"`
+		InFile     flags.Filename `description:"Input: massdns result file" value-name:"INFILE"`
 		//OutFile    flags.Filename `description:"Output file containing IP,domain" value-name:"OUTFILE"`
 	} `positional-args:"yes" required:"yes"`
 }
@@ -100,7 +100,7 @@ func readInput(recordChan chan<- string, outputChan chan<- []string, filename st
 		sc := scanner2.Text()
 		record := strings.Split(sc, "\t")
 		if len(record) < 5 {
-			log.Fatal("incorrect number of fields")
+			log.Fatal("incorrect number of fields:" + sc)
 			break
 		}
 
@@ -111,8 +111,11 @@ func readInput(recordChan chan<- string, outputChan chan<- []string, filename st
 
 		if rrType == "CNAME" {
 			correctDict = cnames
-		} else if rrType == "A" || rrType == "AAAA" {
+		} else if rrType == "A" || rrType == "AAAA" || rrType == "SRV" {
 			correctDict = ins
+		} else if rrType == "DNAME"  {
+			// ignore the very few DNAMEs we have
+			continue
 		} else {
 			panic("Should not happen: incorrect rrType = " + rrType)
 		}
