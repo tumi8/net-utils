@@ -162,6 +162,7 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 
 	// Read input file into two dicts
 	cnames = make(map[string][]string)
+	req := make (map[string]bool)
 	ins = make(map[string][]string)
 
 	fh, _ := os.Open(filename)
@@ -191,6 +192,7 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 			domain := string(sc[0:idx[0]])
 			value := string(sc[idx[3]+1:])
 			_, ok := cnames[domain]
+
 			if !ok {
 				cnames[domain] = []string{value}
 			} else {
@@ -199,7 +201,7 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 					cnames[domain] = append(cnames[domain], value)
 				}
 			}
-			ins[value] = []string{}
+			req[value] = true
 		} else if bytes.Equal(rrType, A) || bytes.Equal(rrType, AAAA) || bytes.Equal(rrType, SRV) || bytes.Equal(rrType, DNAME){
 			// ignore the very few DNAMEs we have
 			continue
@@ -233,9 +235,14 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 		if bytes.Equal(rrType, A) || bytes.Equal(rrType, AAAA) || bytes.Equal(rrType, SRV) {
 			domain := string(sc[0:idx[0]])
 			value := string(sc[idx[3]+1:])
-			if _, ok := ins[domain]; ok {
-				if !contains(ins[domain], value) {
-					ins[domain] = append(ins[domain], value)
+			if _, ok := req[domain]; ok {
+
+				if _, ok := ins[domain]; ok {
+					if !contains(ins[domain], value) {
+						ins[domain] = append(ins[domain], value)
+					}
+				} else {
+					ins[domain] = []string{value}
 				}
 			} else {
 				outputChan <- out{value, domain}
@@ -249,19 +256,12 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 		sc = []byte{}
 		idx = []int{}
 	}
+
 	fh.Close()
 
 	log.Print("Input Read")
 
-	i := 0
-	for domain, ips := range ins {
-		if len(ips) == 0 {
-			i+=1
-			delete(ins, domain)
-		}
-	}
-
-	log.Printf("Input Clean, %d", i)
+	req = nil
 
 	fh, err = os.Open(string(opts.Args.DomainFile))
 	defer fh.Close()
@@ -282,20 +282,6 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 	if err := scanner.Err(); err != nil {
 		log.Println("Reading standard input:", err)
 	}
-
-	// scanner := bufio.NewReader(zr)
-	//for true {
-	//	sc, _, err := scanner.ReadLine()
-	//	if err != nil {
-	//		// if err != io.EOF {
-	//		// 	log.Println(err)
-	//		// }
-	//
-	//		break
-	//	}
-	//	recordChan <- sc
-
-	//}
 }
 
 func main() {
