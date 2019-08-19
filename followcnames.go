@@ -11,8 +11,7 @@ import (
 	"runtime"
 	"sync"
 	"unicode"
-
-	"github.com/jessevdk/go-flags"
+	"flag"
 )
 
 type out struct {
@@ -20,17 +19,11 @@ type out struct {
 	domain string
 }
 
-var opts struct {
-	Args struct {
-		DomainFile flags.Filename `description:"Input: gzipped domain file containinig original domains" value-name:"DOMAINFILE"`
-		InFile     flags.Filename `description:"Input: massdns result file" value-name:"INFILE"`
-		//OutFile    flags.Filename `description:"Output file containing IP,domain" value-name:"OUTFILE"`
-	} `positional-args:"yes" required:"yes"`
-}
-
 // Global variables for CNAME and IN lookup
 var cnames map[string][]string
 var ins map[string][]string
+var logger log.Logger
+
 
 var A = []byte("A")
 var AAAA = []byte("AAAA")
@@ -155,7 +148,7 @@ func outputResult(outputChan <-chan out, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string) {
+func readInput(recordChan chan<- []byte, outputChan chan<- out, inFile, domainFile string) {
 
 	// Close channel at the end of input sending
 	defer close(recordChan)
@@ -165,7 +158,7 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 	req := make (map[string]bool)
 	ins = make(map[string][]string)
 
-	fh, _ := os.Open(filename)
+	fh, _ := os.Open(inFile)
 	scanner2 := bufio.NewReader(fh)
 	var err error
 	var sc []byte
@@ -213,7 +206,7 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 	}
 	fh.Close()
 	log.Print("Finished Phase 1")
-	fh, _ = os.Open(filename)
+	fh, _ = os.Open(inFile)
 	scanner2 = bufio.NewReader(fh)
 	for true {
 
@@ -263,7 +256,7 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 
 	req = nil
 
-	fh, err = os.Open(string(opts.Args.DomainFile))
+	fh, err = os.Open(domainFile)
 	defer fh.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -277,7 +270,10 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 
 	scanner := bufio.NewScanner(zr)
 	for scanner.Scan() {
-		recordChan <- []byte(scanner.Text())
+		tmp := scanner.Bytes()
+		record := make([]byte, len(tmp))
+		copy(record,tmp)
+		recordChan <- record
 	}
 	if err := scanner.Err(); err != nil {
 		log.Println("Reading standard input:", err)
@@ -285,18 +281,13 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, filename string)
 }
 
 func main() {
-
-	// Parse command line arguments
-	parser := flags.NewParser(&opts, flags.Default)
-	if _, err := parser.Parse(); err != nil {
-		if err.(*flags.Error).Type == flags.ErrHelp {
-			return
-		} else if err.(*flags.Error).Type != flags.ErrRequired {
-			log.Fatal(err)
-		} else {
-			os.Exit(1)
-		}
+	flag.Parse()
+	if flag.NArg() != 2 {
+		os.Exit(1)
 	}
+	domainFile := flag.Arg(0)
+	inFile := flag.Arg(1)
+
 
 	numRoutines := 40
 	recordChan := make(chan []byte)
@@ -326,7 +317,7 @@ func main() {
 	go outputResult(outputChan, &wgEnd)
 
 	// Start goroutine for input CSV reading
-	go readInput(recordChan, outputChan, string(opts.Args.InFile))
+	go readInput(recordChan, outputChan, inFile, domainFile)
 
 	wg.Done()
 
