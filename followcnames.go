@@ -14,15 +14,10 @@ import (
 	"flag"
 )
 
-type out struct {
-	value string
-	domain string
-}
-
 // Global variables for CNAME and IN lookup
 var cnames map[string][]string
 var ins map[string][]string
-var logger log.Logger
+var logger *log.Logger
 
 
 var A = []byte("A")
@@ -32,6 +27,11 @@ var DNAME = []byte("DNAME")
 var CNAME = []byte("CNAME")
 
 const limit = 20
+
+type record struct {
+	domain []byte
+	value []byte
+}
 
 func init() {
 	// Set the number of Go processes to 6
@@ -89,7 +89,7 @@ func GetIdx(line []byte) []int {
 	return id
 }
 
-func cnameLookup(origDomain, currDomain string, level int, outputChan chan<- out) {
+func cnameLookup(origDomain, currDomain string, level int) {
 
 	if level > limit {
 		log.Printf("followcnames: depth exceeded for domain %s from origdomain %s \n", currDomain, origDomain)
@@ -98,7 +98,10 @@ func cnameLookup(origDomain, currDomain string, level int, outputChan chan<- out
 
 	if ipMap, ok := ins[currDomain]; ok {
 		for _, ip := range ipMap {
-			outputChan <- out{ip, origDomain}
+			if ip == "\\# 0" {
+				ip = "\\#"
+			}
+			logger.Printf("%s,%s\n",ip, origDomain)
 		}
 	}
 
@@ -107,13 +110,13 @@ func cnameLookup(origDomain, currDomain string, level int, outputChan chan<- out
 			if domain == origDomain {
 				log.Printf("followcnames: circle for domain %s from origdomain %s \n", currDomain, origDomain)
 			} else {
-				cnameLookup(origDomain, domain, level+1, outputChan)
+				cnameLookup(origDomain, domain, level+1)
 			}
 		}
 	}
 }
 
-func processRecords(recordChan <-chan []byte, outputChan chan<- out, wg *sync.WaitGroup) {
+func processRecords(recordChan <-chan []byte, wg *sync.WaitGroup) {
 
 	wg.Add(1)
 
@@ -122,57 +125,63 @@ func processRecords(recordChan <-chan []byte, outputChan chan<- out, wg *sync.Wa
 		record = ToCanonical(record)
 		record = ToLower(record)
 		canon := string(record)
-		cnameLookup(canon, canon, 0, outputChan)
+		cnameLookup(canon, canon, 0)
 	}
 
 	wg.Done()
 }
 
-func outputResult(outputChan <-chan out, wg *sync.WaitGroup) {
-	logger := log.New(os.Stdout, "", 0)
-	for res := range outputChan {
-		// Backward compatibility
-		if res.value == "\\# 0" {
-			res.value = "\\#"
-		}
-		// most recent: decision to *not* drop any outputs, as this is systematically done at later steps
-		// TODO: once stable, drop all the short and crappy outputs
-		//if (len(res[0]) < 3) || (len(res[1]) <3) && (res[0] != "::" ) && (res[0] != "\\#") {
-		//	log.Printf("Short output: " + res[0] + "," + res[1] + "\n")
-		//}
-		// fmt.Print(res[0] + "," + res[1] + "\n")
-		// print should do, and this is only one routine, but lets try this anyway:
-		// https://stackoverflow.com/questions/14694088/is-it-safe-for-more-than-one-goroutine-to-print-to-stdout/43327441#43327441
-		logger.Printf("%s,%s\n",res.value, res.domain)
-	}
-	wg.Done()
-}
-
-func readInput(recordChan chan<- []byte, outputChan chan<- out, inFile, domainFile string) {
+func readInput(recordChan chan<- []byte, inFile, domainFile string, wg *sync.WaitGroup) {
 
 	// Close channel at the end of input sending
 	defer close(recordChan)
 
 	// Read input file into two dicts
-	cnames = make(map[string][]string)
-	req := make (map[string]bool)
-	ins = make(map[string][]string)
+
+	var rrType []byte
+	var idx []int
 
 	fh, _ := os.Open(inFile)
 	scanner2 := bufio.NewReader(fh)
-	var err error
-	var sc []byte
-	var rrType []byte
-	var idx []int
+	lines := 0
 	for true {
-		sc, _, err = scanner2.ReadLine()
+		sc, _, err := scanner2.ReadLine()
 		if err != nil {
 			if err != io.EOF {
 				log.Println(err)
 			}
-
 			break
 		}
+		idx = GetIdx(sc)
+		if len(idx) != 4 {
+			log.Fatal("incorrect number of fields:" + string(sc))
+			break
+		}
+
+		rrType = sc[idx[2]+1:idx[3]]
+
+		if bytes.Equal(rrType, CNAME) {
+			lines += 1
+		}
+	}
+
+	log.Printf("Line: %d", lines)
+
+	cnames = make(map[string][]string,lines)
+	req := make (map[string]bool,lines)
+
+	fh, _ = os.Open(inFile)
+	scanner2 = bufio.NewReader(fh)
+
+	for true {
+		sc, _, err := scanner2.ReadLine()
+		if err != nil {
+			if err != io.EOF {
+				log.Println(err)
+			}
+			break
+		}
+
 		idx = GetIdx(sc)
 		if len(idx) != 4 {
 			log.Fatal("incorrect number of fields:" + string(sc))
@@ -187,7 +196,8 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, inFile, domainFi
 			_, ok := cnames[domain]
 
 			if !ok {
-				cnames[domain] = []string{value}
+				cnames[domain] = make([]string,0,1)
+				cnames[domain] = append(cnames[domain], value)
 			} else {
 
 				if !contains(cnames[domain], value) {
@@ -195,22 +205,25 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, inFile, domainFi
 				}
 			}
 			req[value] = true
+
 		} else if bytes.Equal(rrType, A) || bytes.Equal(rrType, AAAA) || bytes.Equal(rrType, SRV) || bytes.Equal(rrType, DNAME){
 			// ignore the very few DNAMEs we have
 			continue
 		} else {
 			panic("Should not happen: incorrect rrType = " + string(rrType))
 		}
-		sc = []byte{}
 		idx = []int{}
 	}
+
+	ins = make(map[string][]string,len(req))
+
 	fh.Close()
 	log.Print("Finished Phase 1")
 	fh, _ = os.Open(inFile)
 	scanner2 = bufio.NewReader(fh)
 	for true {
 
-		sc, _, err = scanner2.ReadLine()
+		sc, _, err := scanner2.ReadLine()
 		if err != nil {
 			if err != io.EOF {
 				log.Println(err)
@@ -229,7 +242,6 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, inFile, domainFi
 			domain := string(sc[0:idx[0]])
 			value := string(sc[idx[3]+1:])
 			if _, ok := req[domain]; ok {
-
 				if _, ok := ins[domain]; ok {
 					if !contains(ins[domain], value) {
 						ins[domain] = append(ins[domain], value)
@@ -238,7 +250,10 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, inFile, domainFi
 					ins[domain] = []string{value}
 				}
 			} else {
-				outputChan <- out{value, domain}
+				if value == "\\# 0" {
+					value = "\\#"
+				}
+				logger.Printf("%s,%s\n",value, domain)
 			}
 		} else if bytes.Equal(rrType, DNAME) || bytes.Equal(rrType, CNAME) {
 			// ignore the very few DNAMEs we have
@@ -256,7 +271,7 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, inFile, domainFi
 
 	req = nil
 
-	fh, err = os.Open(domainFile)
+	fh, err := os.Open(domainFile)
 	defer fh.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -278,6 +293,7 @@ func readInput(recordChan chan<- []byte, outputChan chan<- out, inFile, domainFi
 	if err := scanner.Err(); err != nil {
 		log.Println("Reading standard input:", err)
 	}
+	wg.Done()
 }
 
 func main() {
@@ -288,38 +304,23 @@ func main() {
 	domainFile := flag.Arg(0)
 	inFile := flag.Arg(1)
 
+	logger = log.New(os.Stdout, "", 0)
 
 	numRoutines := 40
 	recordChan := make(chan []byte)
-	outputChan := make(chan out)
 
 	// wg makes sure that all processing goroutines have terminated before exiting
 	var wg sync.WaitGroup
 	// This 1 is for the main goroutine and makes sure that the output is not immediately closed
 	wg.Add(1)
 
-	// wg makes sure that all processing goroutines have terminated before exiting
-	var wgEnd sync.WaitGroup
-	// This 1 is for the main goroutine and makes sure that the output is not immediately closed
-	wgEnd.Add(1)
-
-	go func() {
-		// Close output channel when all processing goroutines finish
-		defer close(outputChan)
-		wg.Wait()
-	}()
-
 	// Start goroutines for record processing
 	for i := 0; i < numRoutines; i++ {
-		go processRecords(recordChan, outputChan, &wg)
+		go processRecords(recordChan, &wg)
 	}
 
-	go outputResult(outputChan, &wgEnd)
-
 	// Start goroutine for input CSV reading
-	go readInput(recordChan, outputChan, inFile, domainFile)
+	go readInput(recordChan, inFile, domainFile, &wg)
 
-	wg.Done()
-
-	wgEnd.Wait()
+	wg.Wait()
 }
