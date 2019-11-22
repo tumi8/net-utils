@@ -14,6 +14,8 @@ import (
 	"flag"
 )
 
+var compressed = flag.Bool("compressed", true, "is the input file compressed")
+
 // Global variables for CNAME and IN lookup
 var cnames map[string][]string
 var ins map[string][]string
@@ -276,14 +278,19 @@ func readInput(recordChan chan<- []byte, inFile, domainFile string, wg *sync.Wai
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	zr, err := gzip.NewReader(fh)
-	defer zr.Close()
-	if err != nil {
-		log.Fatal(err)
+	var scanner *bufio.Scanner
+	if *compressed {
+		zr, err := gzip.NewReader(fh)
+		defer zr.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+		scanner = bufio.NewScanner(zr)
+	}	else {
+		scanner = bufio.NewScanner(fh)
 	}
 
-	scanner := bufio.NewScanner(zr)
+
 	for scanner.Scan() {
 		tmp := scanner.Bytes()
 		record := make([]byte, len(tmp))
