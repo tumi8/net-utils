@@ -15,6 +15,7 @@ import (
 )
 
 var compressed = flag.Bool("compressed", true, "is the input file compressed")
+var space= flag.Bool("space", false, "false = tab, true = space as seperator")
 
 // Global variables for CNAME and IN lookup
 var cnames map[string][]string
@@ -84,9 +85,16 @@ func ToCanonical(value []byte) []byte {
 func GetIdx(line []byte) []int {
 	var id []int
 	for i, b := range line {
-		if b == '\t'{
-			id = append(id,i)
+		if *space {
+			if b == ' ' {
+				id = append(id, i)
+			}
+		} else {
+			if b == '\t' {
+				id = append(id, i)
+			}
 		}
+
 	}
 	return id
 }
