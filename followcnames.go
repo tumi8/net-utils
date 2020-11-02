@@ -16,6 +16,7 @@ import (
 
 var compressed = flag.Bool("compressed", true, "is the input file compressed")
 var space= flag.Bool("space", false, "false = tab, true = space as seperator")
+var verbose = flag.Bool("v", false, "print more output")
 
 // Global variables for CNAME and IN lookup
 var cnames map[string][]string
@@ -34,6 +35,12 @@ const limit = 20
 type record struct {
 	domain []byte
 	value []byte
+}
+
+func debuglog(fmt string, v ...interface{}) {
+	if *verbose {
+		log.Printf(fmt, v...)
+	}
 }
 
 func init() {
@@ -102,7 +109,7 @@ func GetIdx(line []byte) []int {
 func cnameLookup(origDomain, currDomain string, level int) {
 
 	if level > limit {
-		log.Printf("followcnames: depth exceeded for domain %s from origdomain %s \n", currDomain, origDomain)
+		debuglog("followcnames: depth exceeded for domain %s from origdomain %s \n", currDomain, origDomain)
 		return
 	}
 
@@ -118,7 +125,7 @@ func cnameLookup(origDomain, currDomain string, level int) {
 	if domainMap, ok := cnames[currDomain]; ok {
 		for _, domain := range domainMap {
 			if domain == origDomain {
-				log.Printf("followcnames: circle for domain %s from origdomain %s \n", currDomain, origDomain)
+				debuglog("followcnames: circle for domain %s from origdomain %s \n", currDomain, origDomain)
 			} else {
 				cnameLookup(origDomain, domain, level+1)
 			}
@@ -175,8 +182,6 @@ func readInput(recordChan chan<- []byte, inFile, domainFile string, wg *sync.Wai
 		}
 	}
 
-	log.Printf("Line: %d", lines)
-
 	cnames = make(map[string][]string,lines)
 	req := make (map[string]bool,lines)
 
@@ -228,7 +233,6 @@ func readInput(recordChan chan<- []byte, inFile, domainFile string, wg *sync.Wai
 	ins = make(map[string][]string,len(req))
 
 	fh.Close()
-	log.Print("Finished Phase 1")
 	fh, _ = os.Open(inFile)
 	scanner2 = bufio.NewReader(fh)
 	for true {
@@ -276,8 +280,6 @@ func readInput(recordChan chan<- []byte, inFile, domainFile string, wg *sync.Wai
 	}
 
 	fh.Close()
-
-	log.Print("Input Read")
 
 	req = nil
 
