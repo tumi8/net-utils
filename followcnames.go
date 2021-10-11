@@ -171,8 +171,8 @@ func readInput(recordChan chan<- []byte, inFile, domainFile string, wg *sync.Wai
 		}
 		idx = GetIdx(sc)
 		if len(idx) != 4 {
-			log.Fatal("incorrect number of fields:" + string(sc))
-			break
+			log.Println("incorrect number of fields:" + string(sc))
+			continue
 		}
 
 		rrType = sc[idx[2]+1:idx[3]]
@@ -199,8 +199,8 @@ func readInput(recordChan chan<- []byte, inFile, domainFile string, wg *sync.Wai
 
 		idx = GetIdx(sc)
 		if len(idx) != 4 {
-			log.Fatal("incorrect number of fields:" + string(sc))
-			break
+			log.Println("incorrect number of fields:" + string(sc))
+			continue
 		}
 
 		rrType = sc[idx[2]+1:idx[3]]
@@ -247,8 +247,8 @@ func readInput(recordChan chan<- []byte, inFile, domainFile string, wg *sync.Wai
 		}
 		idx = GetIdx(sc)
 		if len(idx) != 4 {
-			log.Fatal("incorrect number of fields:" + string(sc))
-			break
+			log.Println("incorrect number of fields:" + string(sc))
+			continue
 		}
 
 		rrType = sc[idx[2]+1:idx[3]]
