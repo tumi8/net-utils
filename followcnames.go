@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"compress/gzip"
+	"github.com/DataDog/zstd"
 	// "fmt"
 	"bytes"
 	"io"
@@ -14,7 +15,8 @@ import (
 	"flag"
 )
 
-var compressed = flag.Bool("compressed", true, "is the input file compressed")
+var zstdcompressed = flag.Bool("compressed", true, "is the input file zstd compressed")
+var gzipcompressed = flag.Bool("gzipcompressed", false, "is the input file gzip compressed")
 var space= flag.Bool("space", false, "false = tab, true = space as seperator")
 var verbose = flag.Bool("v", false, "print more output")
 
@@ -289,14 +291,18 @@ func readInput(recordChan chan<- []byte, inFile, domainFile string, wg *sync.Wai
 		log.Fatal(err)
 	}
 	var scanner *bufio.Scanner
-	if *compressed {
+	if *gzipcompressed {
 		zr, err := gzip.NewReader(fh)
 		defer zr.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
 		scanner = bufio.NewScanner(zr)
-	}	else {
+	} else if *zstdcompressed {
+		zstdReader := zstd.NewReader(fh)
+		scanner = bufio.NewScanner(zstdReader)
+		defer zstdReader.Close()
+	} else {
 		scanner = bufio.NewScanner(fh)
 	}
 
